@@ -43,7 +43,9 @@ int main(int argc, char *argv[])
         if (state) {
           std::cout << mmt_id << " ";
           std::cout << state->id() << " ";
-          std::cout << state->candidate().distance() << std::endl;
+          std::cout << state->candidate().distance() << " ";
+          std::cout << "(" << state->candidate().vertex().lat() << ", ";
+          std::cout << state->candidate().vertex().lng() << ")" << std::endl;
           count++;
         }
         mmt_id++;
