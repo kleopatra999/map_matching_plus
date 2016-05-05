@@ -25,6 +25,7 @@ int main(int argc, char *argv[])
   auto matcher = matcher_factory.Create(modename);
 
   std::vector<Measurement> measurements;
+  std::vector<std::string> uuids;
   std::string line;
 
   size_t index = 0;
@@ -33,26 +34,31 @@ int main(int argc, char *argv[])
     if (std::cin.eof() || line.empty()) {
 
       // Offline match
-      std::cout << "Sequence " << index++ << std::endl;
+      std::cout.precision(15);
       const auto& results = matcher->OfflineMatch(measurements);
 
       // Show results
       size_t mmt_id = 0, count = 0;
       for (const auto& result : results) {
         const auto state = result.state();
+        const Measurement& measurement = measurements[mmt_id];
+        const std::string& uuid = uuids[mmt_id];
+        const PointLL point = measurement.lnglat();
+        float originalLat = point.lat();
+        float originalLon = point.lng();
+        std::cout << uuid << "," << originalLat << "," << originalLon << ",";
         if (state) {
-          std::cout << mmt_id << " ";
-          std::cout << state->id() << " ";
-          std::cout << state->candidate().distance() << " ";
-          std::cout << "(" << state->candidate().vertex().lat() << ", ";
-          std::cout << state->candidate().vertex().lng() << ")" << std::endl;
+          float lon = state->candidate().vertex().lng();
+          float lat = state->candidate().vertex().lat();
+          std::cout << lat << "," << lon;
           count++;
+        } else {
+          std::cout << ",";
         }
         mmt_id++;
-      }
 
-      // Summary
-      std::cout << count << "/" << measurements.size() << std::endl << std::endl;
+        std::cout << "," << default_gps_accuracy << "," << default_search_radius << std::endl;
+      }
 
       // Clean up
       measurements.clear();
@@ -67,8 +73,12 @@ int main(int argc, char *argv[])
 
     // Read coordinates from the input line
     float lng, lat;
+    std::string uuid;
     std::stringstream stream(line);
-    stream >> lng; stream >> lat;
+    stream >> uuid;
+    stream >> lng;
+    stream >> lat;
+    uuids.emplace_back(uuid);
     measurements.emplace_back(PointLL(lng, lat),
                               default_gps_accuracy,
                               default_search_radius);
